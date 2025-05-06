@@ -77,6 +77,10 @@ async def rasclad(update: Update, context: ContextTypes.DEFAULT_TYPE):
         card = random.choice(available_cards)
 
         is_reversed = random.choice([True, False])
+        if card["suit"] == "Старший Аркан":
+    file_name = f"{card['number']}_{card['name']}.png"
+else:
+    file_name = f"{card['name']}.png"
         file_id = find_file_on_drive(card['name'].replace(' ', '_') + ".png")
 
         if file_id:
