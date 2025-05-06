@@ -91,6 +91,8 @@ async def rasclad(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             suit_name = suit_endings.get(card['suit'], card['suit'])
             file_name = f"{card['number']}_{suit_name}.png"
+        else:
+            file_name = f"{card['name']}.png"
 
         file_id = find_file_on_drive(file_name)
 
