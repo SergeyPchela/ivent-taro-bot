@@ -7,9 +7,9 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
 # Ваши ключи и настройки
-GOOGLE_API_KEY = 'ВАШ_API_КЛЮЧ'  # замените здесь позже на свой реальный ключ
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 FOLDER_ID = '1BOlUVdj7CQ8WmeRNNu8GEFUC_dY66TdB'
-TELEGRAM_BOT_TOKEN = '7484124321:AAFAnUNestLk4SCBA1A6lgf2hYp8haM2d6k'
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
 # Загрузка колоды карт из JSON
 with open('ivent_taro_full_deck.json', 'r', encoding='utf-8') as f:
