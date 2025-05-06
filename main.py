@@ -77,11 +77,13 @@ async def rasclad(update: Update, context: ContextTypes.DEFAULT_TYPE):
         card = random.choice(available_cards)
 
         is_reversed = random.choice([True, False])
+
         if card["suit"] == "Старший Аркан":
-    file_name = f"{card['number']}_{card['name']}.png"
-else:
-    file_name = f"{card['name']}.png"
-        file_id = find_file_on_drive(card['name'].replace(' ', '_') + ".png")
+            file_name = f"{card['number']}_{card['name']}.png"
+        else:
+            file_name = f"{card['name']}.png"
+
+        file_id = find_file_on_drive(file_name)
 
         if file_id:
             image_url = get_drive_download_link(file_id)
@@ -112,7 +114,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     if query.data == 'new_rasclad':
-        await rasclad(query, context)
+        await rasclad(update, context)
 
 # Запуск приложения
 if __name__ == '__main__':
@@ -120,6 +122,10 @@ if __name__ == '__main__':
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("rasclad", rasclad))
+    app.add_handler(CallbackQueryHandler(button))
+
+    app.run_polling()
+
     app.add_handler(CallbackQueryHandler(button))
 
     app.run_polling()
