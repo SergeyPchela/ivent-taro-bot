@@ -7,12 +7,12 @@ from PIL import Image
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# Ключи и настройки
+# Ключи
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-FOLDER_ID = os.getenv('FOLDER_ID')
+FOLDER_ID = '1BOlUVdj7CQ8WmeRNNu8GEFUC_dY66TdB'
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
-# Загрузка колоды карт
+# Загрузка колоды
 with open('ivent_taro_full_deck.json', 'r', encoding='utf-8') as f:
     deck = json.load(f)
 
@@ -24,7 +24,7 @@ positions = [
     ("💰 Финансы и подрядчики", "Пентакли")
 ]
 
-# Окончания мастей
+# Правильные окончания мастей
 suit_endings = {
     "Жезлы": "Жезлов",
     "Кубки": "Кубков",
@@ -32,25 +32,22 @@ suit_endings = {
     "Пентакли": "Пентаклей"
 }
 
-# Поиск файла на Google Drive
+# Найти файл на Google Drive
 def find_file_on_drive(file_name):
-    search_url = (
-        f"https://www.googleapis.com/drive/v3/files?q="
-        f"name='{file_name}' and '{FOLDER_ID}' in parents and trashed=false"
-        f"&key={GOOGLE_API_KEY}&fields=files(id,name)"
-    )
-    response = requests.get(search_url)
+    query = f"name='{file_name}' and '{FOLDER_ID}' in parents and trashed=false"
+    url = f"https://www.googleapis.com/drive/v3/files?q={query}&key={GOOGLE_API_KEY}&fields=files(id,name)"
+    response = requests.get(url)
     if response.status_code == 200:
         files = response.json().get('files', [])
         if files:
             return files[0]['id']
     return None
 
-# Получение прямой ссылки на файл
+# Получить прямую ссылку на файл
 def get_drive_download_link(file_id):
     return f"https://drive.google.com/uc?id={file_id}"
 
-# Загрузка и поворот изображения
+# Скачать и повернуть изображение
 def download_and_rotate_image(image_url, rotate=False):
     response = requests.get(image_url)
     if response.status_code == 200:
@@ -83,19 +80,19 @@ async def rasclad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for position_text, suit in positions:
         available_cards = [card for card in deck if card['suit'] == suit or card['suit'] == 'Старший Аркан']
         card = random.choice(available_cards)
-
         is_reversed = random.choice([True, False])
 
+        # Формируем правильное имя файла
         if card['suit'] == "Старший Аркан":
-            card_name = card['name'].title().replace(' ', '_')
-            file_name = f"{card['number']}_{card_name}.png"
-        elif "number" in card:
+            file_name = f"{card['number']}_{card['name']}.png"
+        else:
             suit_name = suit_endings.get(card['suit'], card['suit'])
             file_name = f"{card['number']}_{suit_name}.png"
-        else:
-            file_name = f"{card['name']}.png"
 
-        file_id = find_file_on_drive(file_name)
+        # Заменяем пробелы на подчёркивания для поиска
+        search_file_name = file_name.replace(' ', '_')
+
+        file_id = find_file_on_drive(search_file_name)
 
         if file_id:
             image_url = get_drive_download_link(file_id)
@@ -104,11 +101,13 @@ async def rasclad(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 caption = f"{position_text}:\n{card['name']} ({'Перевёрнутая' if is_reversed else 'Прямая'})\n➡️ {card['reversed' if is_reversed else 'upright']}"
                 await update.message.reply_photo(photo=rotated_image, caption=caption)
             else:
-                await update.message.reply_text(f"⚠️ Ошибка загрузки изображения карты {card['name']} (ожидали файл: {file_name}).")
+                await update.message.reply_text(f"⚠️ Ошибка загрузки изображения карты {card['name']}.")
         else:
-            await update.message.reply_text(f"⚠️ Карта {card['name']} не найдена на Google Drive (ожидали файл: {file_name}).")
+            await update.message.reply_text(f"⚠️ Карта {card['name']} не найдена на Google Drive (ожидали файл: {search_file_name}).")
 
-    keyboard = [[InlineKeyboardButton("🎯 Сделать новый расклад", callback_data='new_rasclad')]]
+    keyboard = [
+        [InlineKeyboardButton("🎯 Сделать новый расклад", callback_data='new_rasclad')]
+    ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text(
@@ -117,20 +116,18 @@ async def rasclad(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
-# Обработчик кнопок
+# Кнопка "сделать новый расклад"
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-
     if query.data == 'new_rasclad':
         await rasclad(query, context)
 
 # Запуск приложения
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("rasclad", rasclad))
     app.add_handler(CallbackQueryHandler(button))
-
     app.run_polling()
+
