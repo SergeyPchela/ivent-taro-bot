@@ -88,7 +88,7 @@ async def rasclad(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Формируем правильное имя файла
         if card['suit'] == "Старший Аркан":
             file_name = f"{card['number']}_{card['name']}.png"
-        else:
+        elif "number" in card:
             suit_name = suit_endings.get(card['suit'], card['suit'])
             file_name = f"{card['number']}_{suit_name}.png"
         else:
