@@ -83,7 +83,7 @@ async def rasclad(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif "number" in card:
             file_name = f"{card['number']}_{card['suit']}.png"
         else:
-            file_name = f"{card['number']}_{card['suit']}.png"
+            file_name = f"{card['name']}.png"
 
         file_id = find_file_on_drive(file_name)
 
