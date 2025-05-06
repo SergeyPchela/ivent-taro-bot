@@ -1,6 +1,7 @@
 import random
 import json
 import requests
+import os
 from io import BytesIO
 from PIL import Image
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
