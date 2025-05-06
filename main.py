@@ -75,13 +75,22 @@ async def rasclad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for position_text, suit in positions:
         available_cards = [card for card in deck if card['suit'] == suit or card['suit'] == 'Старший Аркан']
         card = random.choice(available_cards)
+        
+        # Правильные окончания мастей для файлов
+suit_endings = {
+    "Жезлы": "Жезлов",
+    "Кубки": "Кубков",
+    "Мечи": "Мечей",
+    "Пентакли": "Пентаклей"
+}
 
         is_reversed = random.choice([True, False])
 
         if card["suit"] == "Старший Аркан":
             file_name = f"{card['number']}_{card['name']}.png"
         elif "number" in card:
-            file_name = f"{card['number']}_{card['suit']}.png"
+            suit_name = suit_endings.get(card["suit"], card["suit"])
+            file_name = f"{card['number']}_{suit_name}.png"
         else:
             file_name = f"{card['name']}.png"
 
