@@ -24,7 +24,7 @@ positions = [
     ("💰 Финансы и подрядчики", "Пентакли")
 ]
 
-# Словарь правильных окончаний для мастей
+# Окончания мастей
 suit_endings = {
     "Жезлы": "Жезлов",
     "Кубки": "Кубков",
@@ -46,11 +46,11 @@ def find_file_on_drive(file_name):
             return files[0]['id']
     return None
 
-# Получение ссылки на загрузку
+# Получение прямой ссылки на файл
 def get_drive_download_link(file_id):
     return f"https://drive.google.com/uc?id={file_id}"
 
-# Скачивание и поворот изображения
+# Загрузка и поворот изображения
 def download_and_rotate_image(image_url, rotate=False):
     response = requests.get(image_url)
     if response.status_code == 200:
@@ -83,11 +83,12 @@ async def rasclad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for position_text, suit in positions:
         available_cards = [card for card in deck if card['suit'] == suit or card['suit'] == 'Старший Аркан']
         card = random.choice(available_cards)
+
         is_reversed = random.choice([True, False])
 
-        # Формируем правильное имя файла
         if card['suit'] == "Старший Аркан":
-            file_name = f"{card['number']}_{card['name']}.png"
+            card_name = card['name'].title().replace(' ', '_')
+            file_name = f"{card['number']}_{card_name}.png"
         elif "number" in card:
             suit_name = suit_endings.get(card['suit'], card['suit'])
             file_name = f"{card['number']}_{suit_name}.png"
@@ -103,14 +104,11 @@ async def rasclad(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 caption = f"{position_text}:\n{card['name']} ({'Перевёрнутая' if is_reversed else 'Прямая'})\n➡️ {card['reversed' if is_reversed else 'upright']}"
                 await update.message.reply_photo(photo=rotated_image, caption=caption)
             else:
-                await update.message.reply_text(f"⚠️ Ошибка загрузки изображения карты {card['name']}.")
+                await update.message.reply_text(f"⚠️ Ошибка загрузки изображения карты {card['name']} (ожидали файл: {file_name}).")
         else:
             await update.message.reply_text(f"⚠️ Карта {card['name']} не найдена на Google Drive (ожидали файл: {file_name}).")
 
-    # Кнопка для нового расклада
-    keyboard = [
-        [InlineKeyboardButton("🎯 Сделать новый расклад", callback_data='new_rasclad')]
-    ]
+    keyboard = [[InlineKeyboardButton("🎯 Сделать новый расклад", callback_data='new_rasclad')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text(
@@ -119,7 +117,7 @@ async def rasclad(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
-# Обработчик нажатия кнопки
+# Обработчик кнопок
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
