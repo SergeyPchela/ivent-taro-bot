@@ -14,17 +14,16 @@ from googleapiclient.discovery import build
 load_dotenv()
 
 # Параметры
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')  # Пока не нужен, оставим для совместимости
 FOLDER_ID = os.getenv('FOLDER_ID')
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
-# Путь к JSON-файлу сервисного аккаунта
-SERVICE_ACCOUNT_FILE = 'iventtarobot-f314d38a42d7.json'
+# Загружаем JSON сервисного аккаунта из переменной окружения
+service_account_info = json.loads(os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON'))
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 
-# Авторизация через сервисный аккаунт
-credentials = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE, scopes=SCOPES
+credentials = service_account.Credentials.from_service_account_info(
+    service_account_info,
+    scopes=SCOPES
 )
 drive_service = build('drive', 'v3', credentials=credentials)
 
