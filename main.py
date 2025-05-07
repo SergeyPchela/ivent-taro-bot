@@ -1,6 +1,6 @@
 import os
-import random
 import json
+import random
 import requests
 from io import BytesIO
 from PIL import Image
@@ -14,17 +14,25 @@ from googleapiclient.discovery import build
 load_dotenv()
 
 # Параметры
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 FOLDER_ID = os.getenv('FOLDER_ID')
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
-# Загружаем JSON сервисного аккаунта из переменной окружения
-service_account_info = json.loads(os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON'))
+# Загрузка JSON сервисного аккаунта из переменной окружения
+GOOGLE_SERVICE_ACCOUNT_JSON = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON')
+
+if not GOOGLE_SERVICE_ACCOUNT_JSON:
+    raise Exception("Не найдена переменная GOOGLE_SERVICE_ACCOUNT_JSON!")
+
+service_account_info = json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 
 credentials = service_account.Credentials.from_service_account_info(
     service_account_info,
     scopes=SCOPES
 )
+
+# Создание клиента Drive API
 drive_service = build('drive', 'v3', credentials=credentials)
 
 # Загрузка колоды карт
@@ -39,7 +47,7 @@ positions = [
     ("💰 Финансы и подрядчики", "Пентакли")
 ]
 
-# Поиск файла на Google Drive через сервисный аккаунт
+# Поиск файла на Google Drive
 def find_file_on_drive(file_name):
     query = f"name = '{file_name}' and '{FOLDER_ID}' in parents and trashed = false"
     results = drive_service.files().list(
@@ -75,10 +83,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🍏 Добро пожаловать в Ивент Таро!\n\n"
         "Здесь карты расскажут:\n"
-        "• Какая будет атмосфера среди гостей 🥂\n"
-        "• Как пройдут шоу на сцене 🎤\n"
-        "• Всё ли будет в порядке с техникой ⚙️\n"
-        "• И порадуют ли вас финансы 💰\n\n"
+        "• Какая будет атмосфера среди гостей \ud83e\udd42\n"
+        "• Как пройдут шоу на сцене \ud83c\udfa4\n"
+        "• Всё ли будет в порядке с техникой \u2699\ufe0f\n"
+        "• И порадуют ли вас финансы \ud83d\udcb0\n\n"
         "Введите команду /rasclad, чтобы узнать предсказание!"
     )
 
