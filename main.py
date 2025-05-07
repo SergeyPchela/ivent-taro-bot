@@ -7,17 +7,29 @@ from PIL import Image
 from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
 
-# Загружаем переменные окружения
+# Загрузка переменных окружения
 load_dotenv()
 
-# Ваши ключи и настройки
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+# Параметры
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')  # Пока не нужен, оставим для совместимости
 FOLDER_ID = os.getenv('FOLDER_ID')
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
-# Загрузка колоды карт из JSON
-with open('ivent_taro_full_deck.json', 'r', encoding='utf-8') as f:
+# Путь к JSON-файлу сервисного аккаунта
+SERVICE_ACCOUNT_FILE = 'iventtarobot-f314d38a42d7.json'
+SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+
+# Авторизация через сервисный аккаунт
+credentials = service_account.Credentials.from_service_account_file(
+    SERVICE_ACCOUNT_FILE, scopes=SCOPES
+)
+drive_service = build('drive', 'v3', credentials=credentials)
+
+# Загрузка колоды карт
+with open('ivent_taro_full_deck_numbers_full.json', 'r', encoding='utf-8') as f:
     deck = json.load(f)
 
 # Позиции расклада
@@ -28,19 +40,18 @@ positions = [
     ("💰 Финансы и подрядчики", "Пентакли")
 ]
 
-# Поиск файла на Google Drive
+# Поиск файла на Google Drive через сервисный аккаунт
 def find_file_on_drive(file_name):
-    search_url = (
-        f"https://www.googleapis.com/drive/v3/files?q="
-        f"name='{file_name}' and '{FOLDER_ID}' in parents and trashed=false"
-        f"&key={GOOGLE_API_KEY}&fields=files(id,name)"
-    )
-    response = requests.get(search_url)
-    if response.status_code == 200:
-        files = response.json().get('files', [])
-        if files:
-            return files[0]['id']
-    return None
+    query = f"name = '{file_name}' and '{FOLDER_ID}' in parents and trashed = false"
+    results = drive_service.files().list(
+        q=query,
+        spaces='drive',
+        fields='files(id, name)'
+    ).execute()
+    items = results.get('files', [])
+    if not items:
+        return None
+    return items[0]['id']
 
 # Получение прямой ссылки на файл
 def get_drive_download_link(file_id):
